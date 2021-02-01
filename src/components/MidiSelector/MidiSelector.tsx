@@ -5,7 +5,7 @@ import {FormControl, InputLabel, MenuItem, Select} from '@material-ui/core';
 
 const MidiSelector = observer((props: any) => {
   const {devices, handle, selected, label} = props;
-  const items = _.map(devices, (x, index) => <MenuItem key={index} value={x.name}>{x.name}</MenuItem>);
+  const items = _.map(devices, (x, index) => <MenuItem key={index} value={x}>{x}</MenuItem>);
 
   return (
         <FormControl fullWidth>
