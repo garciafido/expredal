@@ -30,7 +30,7 @@ ExpredalConfig expredalConfig = {
   {
       true, true, true, true, true,
       true, true, true, true, true,
-      false,
+      true,
       true, true, true, true, true
   }
 };
@@ -96,21 +96,15 @@ boolean isEpromSigned() {
 
 void initEprom() {
   EEPROM.put(EPROM_ADDRESS, EPROM_SIGNATURE);
-  byte tmp[sizeof(expredalConfig)];
-  memcpy(&tmp, &expredalConfig, sizeof(expredalConfig));
-  EEPROM.put(CONFIG_ADDRESS, tmp);
+  EEPROM.put(CONFIG_ADDRESS, expredalConfig);
 }
 
 void readConfiguration() {
-  byte tmp[sizeof(expredalConfig)];
-  memcpy(&expredalConfig, &tmp, sizeof(expredalConfig));
-  EEPROM.get(CONFIG_ADDRESS, tmp);
+  EEPROM.get(CONFIG_ADDRESS, expredalConfig);
 }
 
-void writeConfiguration(int value) {
-  byte tmp[sizeof(expredalConfig)];
-  memcpy(&tmp, &expredalConfig, sizeof(expredalConfig));
-  EEPROM.put(CONFIG_ADDRESS, tmp);
+void writeConfiguration() {
+  EEPROM.put(CONFIG_ADDRESS, expredalConfig);
 }
 
 void printEprom() {

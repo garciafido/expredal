@@ -6,9 +6,13 @@ import {action, observable, configure, makeAutoObservable} from "mobx";
 configure({ enforceActions: "observed" });
 
 WebMidi.enable(function (err) {
-  console.log(WebMidi.inputs);
-  console.log(WebMidi.outputs);
-});
+    if(err) {
+            console.log("WebMidi cannot be enabled!");
+        } else {
+            console.log("WebMidi enabled!");
+        }
+    },
+    true);
 
 class ExpredalStore {
     @observable state: string = 'pending';
@@ -17,6 +21,7 @@ class ExpredalStore {
     @observable midiOutput: string = '';
     @observable midiInputs: Input[] = [];
     @observable midiOutputs: Output[] = [];
+    @observable enabledChannels: boolean[] = [];
 
     constructor() {
         makeAutoObservable(this)
@@ -28,8 +33,19 @@ class ExpredalStore {
     }
 
     @action.bound
+    readConfig() {
+        const output: any = WebMidi.getOutputByName(this.midiOutput);
+        if (output) {
+            output.playNote("C1");
+        } else {
+            this.errorMessage = `Cannot connect to ${this.midiOutput}`;
+        }
+    }
+
+    @action.bound
     setMidiOutput(output: string) {
         this.midiOutput = output;
+        this.readConfig();
     }
 
     @action.bound
