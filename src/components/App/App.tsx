@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import { observer } from "mobx-react";
-import {Button, Checkbox, Grid, Slider, TextField, Typography} from '@material-ui/core';
+import {Button, Checkbox, Grid, TextField, Typography, LinearProgress} from '@material-ui/core';
 import { store } from '../../store';
 import { MidiSelector } from '../MidiSelector';
 import _ from 'lodash';
@@ -18,8 +18,13 @@ const App = observer((props: any) => {
     store.setMidiDriver(event.target.value);
   };
 
-  const channelsData = _.map([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15], x =>
-      <Grid container xs={12}>
+
+  const channelsData = _.map([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15], x => {
+      const MIN = store.data[x].minimum;
+      const MAX = store.data[x].maximum;
+      const normalize = (value: number) => ((value - MIN) * 100) / (MAX - MIN);
+
+      return (<Grid container xs={12}>
           <Grid item xs={2}>{x+1}</Grid>
           <Grid item xs={2}>
             <Checkbox
@@ -47,15 +52,11 @@ const App = observer((props: any) => {
 
           </Grid>
           <Grid item xs={4}>
-            <Slider
-              getAriaValueText={store.data[x].value}
-              aria-labelledby="discrete-slider-always"
-              step={1}
-              disabled={true}
-              valueLabelDisplay="on"
-            />
+            <LinearProgress variant="determinate" value={normalize(store.data[x].value)} />
         </Grid>
       </Grid>);
+  }
+);
 
   return (
     <Grid container alignItems="flex-start" direction="row">

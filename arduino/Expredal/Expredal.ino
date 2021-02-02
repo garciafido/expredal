@@ -25,6 +25,7 @@ struct ExpredalConfig {
 //
 #define PIN_EXPRESSION A0  // Analog input pin
 #define CC_EXPRESSION 11   // CC midi message for expression pedal value change
+#define CHANGE_SENSITIVITY 7
 //
 // END OF CODE CONFIGURATION
 //
@@ -33,9 +34,10 @@ struct ExpredalConfig {
 // RAM MEMORY STATE
 //
 int lastValue = -1;
+int lastRawValue = -1;
 boolean on = true;
 ExpredalConfig expredalConfig = {
-  {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
   {127,127,127,127,127,127,127,127,127,127,127,127,127,127,127,127}
 };
@@ -45,7 +47,7 @@ ExpredalConfig expredalConfig = {
 
 void readCommands() {
   midiEventPacket_t command = MidiUSB.read();
-    if (command.header != 0) {
+    if (command.header == 0x09) {
       byte expredalCommand = command.byte1>>4<<4;
       if (expredalCommand == 0x90) {
         byte channel = command.byte1 & 0b1111;
@@ -60,7 +62,7 @@ void readCommands() {
         } else if (note == MAXIMUM_NOTE) {
           expredalConfig.maximumValues[channel] = velocity;
         } else if (note == GET_CONFIG_NOTE) {
-          printEprom();
+          getConfiguration();
         } else if (note == SAVE_CONFIG_NOTE) {
           writeConfiguration();
           printEprom();
@@ -69,7 +71,7 @@ void readCommands() {
     }
 }
 
-void controlChange(byte control, byte rawValue) {
+void controlChange(byte control, int rawValue) {
   if (on) {
     for (int channel = 0; channel < 16; channel++) {
       if (expredalConfig.enabled[channel]) {
@@ -77,6 +79,12 @@ void controlChange(byte control, byte rawValue) {
         value = constrain(value, expredalConfig.minimumValues[channel], expredalConfig.maximumValues[channel]);
         midiEventPacket_t event = {CONTROL_CHANGE, CONTINUOUS_CONTROLLER | channel, control, value};
         MidiUSB.sendMIDI(event);
+        Serial.print("Channel: ");
+        Serial.print(channel);
+        Serial.print(" Sensor: ");
+        Serial.print(rawValue);
+        Serial.print(" Valuel: ");
+        Serial.println(value);
       }
     }
     MidiUSB.flush();
@@ -91,15 +99,18 @@ void setup() {
 }
 
 void loop() {
-  int sensorValue = analogRead(PIN_EXPRESSION);
-
   readCommands();
 
-  if (sensorValue != lastValue) {
+  int sensorValue = analogRead(PIN_EXPRESSION);
+  int value = map(sensorValue, 0, 1023, 0, 127);
+  value = constrain(value, 0, 127);
+
+  if (abs(sensorValue-lastRawValue) > CHANGE_SENSITIVITY && (value != lastValue)) {
     controlChange(CC_EXPRESSION, sensorValue);
-    lastValue = sensorValue;
+    lastValue = value;
+    lastRawValue = sensorValue;
   }
-  delay(1); // Frequency = 1 Khz
+  delay(10); // Frequency = 1 Khz
 }
 
 boolean isEpromSigned() {
@@ -138,4 +149,27 @@ void printEprom() {
     Serial.print(expredalConfig.maximumValues[channel]);
     Serial.println("");
   }
+}
+
+void noteOn(byte channel, byte pitch, byte velocity) {
+  midiEventPacket_t noteOn = {0x09, 0x90 | channel, pitch, velocity};
+  MidiUSB.sendMIDI(noteOn);
+}
+
+
+void getConfiguration() {
+  for (int channel=0; channel < 16; channel++) {
+    if (expredalConfig.enabled[channel]) {
+      noteOn(channel, ENABLE_NOTE, 1);
+    } else {
+      noteOn(channel, DISABLE_NOTE, 1);
+    }
+  }
+  for (int channel=0; channel < 16; channel++) {
+    noteOn(channel, MINIMUM_NOTE, expredalConfig.minimumValues[channel]);
+  }
+  for (int channel=0; channel < 16; channel++) {
+    noteOn(channel, MAXIMUM_NOTE, expredalConfig.maximumValues[channel]);
+  }
+  MidiUSB.flush();
 }

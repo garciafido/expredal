@@ -1,4 +1,4 @@
-import WebMidi from "webmidi";
+import WebMidi, { InputEventNoteon, InputEventControlchange } from "webmidi";
 
 import {action, observable, configure, makeAutoObservable} from "mobx";
 import _ from "lodash";
@@ -13,43 +13,50 @@ const EXPREDAL_READ_CONFIG = 'G1';
 const EXPREDAL_SAVE_CONFIG = 'A1';
 
 
+const initData = [
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        {enabled: false, minimum: 0, maximum: 127, value: 0},
+        ];
+
+function controlChange(store: ExpredalStore, event: InputEventControlchange) {
+    store.receiveControlChange(event);
+}
+
+
 class ExpredalStore {
     @observable state: string = 'pending';
     @observable errorMessage: string = '';
     @observable midiDriver: string = '';
     @observable midiDrivers: string[] = [];
-    @observable data: {enabled: boolean, minimum: number, maximum: number, value: any}[] = [
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        {enabled: false, minimum: 0, maximum: 127, value: undefined},
-        ];
+    @observable data: {enabled: boolean, minimum: number, maximum: number, value: any}[] = initData;
 
     constructor() {
         makeAutoObservable(this);
         const self: ExpredalStore = this;
         WebMidi.enable(function (err) {
             if(err) {
-                    console.log("WebMidi cannot be enabled!");
-                } else {
-                    console.log("WebMidi enabled!");
-                    const inputs = _.map(WebMidi.inputs, x => x.name);
-                    const outputs = _.map(WebMidi.outputs, x => x.name);
-                    self.setMidiDrivers(_.intersection(outputs, inputs));
-                }
-            },
+                console.log("WebMidi cannot be enabled!");
+            } else {
+                console.log("WebMidi enabled!");
+                const inputs = _.map(WebMidi.inputs, x => x.name);
+                const outputs = _.map(WebMidi.outputs, x => x.name);
+                self.setMidiDrivers(_.intersection(outputs, inputs));
+            }
+        },
             true);
     }
 
@@ -84,9 +91,54 @@ class ExpredalStore {
     }
 
     @action.bound
-    setMidiDriver(output: string) {
-        if (this.midiDriver !== output) {
-            this.midiDriver = output;
+    async receiveNoteOn(event: InputEventNoteon) {
+        const note = `${event.note.name}${event.note.octave}`;
+        if (note === EXPREDAL_MINIMUM) {
+            this.data[event.channel - 1].minimum = event.rawVelocity;
+        } else if (note === EXPREDAL_MAXIMUM) {
+            this.data[event.channel-1].maximum = event.rawVelocity;
+        } else if (note === EXPREDAL_ENABLED) {
+            this.data[event.channel-1].enabled = true;
+        } else if (note === EXPREDAL_DISABLED) {
+            this.data[event.channel-1].enabled = false;
+        }
+    }
+
+    @action.bound
+    receiveControlChange(event: InputEventControlchange) {
+        if (event.controller.number === 11 && this.data[event.channel-1].value !== event.value) {
+            this.data[event.channel-1].value = event.value;
+            console.log(event.value);
+        }
+    }
+
+    @action.bound
+    setMidiDriver(driver: string) {
+        if (this.midiDriver !== driver) {
+            this.data = initData;
+            if (this.midiDriver !== '') {
+                const oldInput: any = WebMidi.getInputByName(this.midiDriver);
+                if (oldInput) {
+                    oldInput.removeListener();
+                }
+            }
+            this.midiDriver = driver;
+            const input: any = WebMidi.getInputByName(this.midiDriver);
+            if (input) {
+                const self = this;
+                input.addListener("noteon", "all", async (e: InputEventNoteon) => {
+                    await self.receiveNoteOn(e);
+                });
+                input.addListener("controlchange", "all", async (e: InputEventControlchange) => {
+                        _.debounce(controlChange, 100, {
+                            'leading': false,
+                            'trailing': true
+                        })(self, e);
+                    }
+                );
+            } else {
+                this.errorMessage = `Cannot connect to input driver "${this.midiDriver}"`;
+            }
             this.readConfig();
         }
     }
