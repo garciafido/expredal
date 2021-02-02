@@ -76,6 +76,8 @@ void loop() {
   sensorValue = map(sensorValue, 0, 1023, 0, 127);
   sensorValue = constrain(sensorValue, 0, 127);
 
+  readCommands();
+
   if (sensorValue != lastValue) {
     controlChange(CC_EXPRESSION, sensorValue);
     lastValue = sensorValue;

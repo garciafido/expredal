@@ -1,9 +1,10 @@
 import React from 'react';
 import './App.css';
 import { observer } from "mobx-react";
-import { Grid } from '@material-ui/core';
+import {Checkbox, Divider, Grid, Slider, TextField, Typography} from '@material-ui/core';
 import { store } from '../../store';
 import { MidiSelector } from '../MidiSelector';
+import _ from 'lodash';
 
 
 const App = observer((props: any) => {
@@ -13,13 +14,48 @@ const App = observer((props: any) => {
   } else if (store.state === 'done') {
   }
 
-  const handleInput = (event: any) => {
-    store.setMidiInput(event.target.value);
+  const handleDriver = (event: any) => {
+    store.setMidiDriver(event.target.value);
   };
 
-  const handleOutput = (event: any) => {
-    store.setMidiOutput(event.target.value);
-  };
+  const channelsData = _.map([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16], x =>
+      <Grid container xs={12}>
+          <Grid item xs={2}>{x}</Grid>
+          <Grid item xs={2}>
+            <Checkbox
+              color="primary"
+              checked={store.data[x-1].enabled}
+              onChange={event => store.setEnabled(x, event.target.checked)}
+              inputProps={{ 'aria-label': 'primary checkbox' }}
+            />
+          </Grid>
+          <Grid item xs={2}>
+            <TextField
+              type="number"
+              value={store.data[x-1].minimum}
+              onChange={event => store.setMinimum(x, event.target.value)}
+              InputProps={{ inputProps: { min: "0", max: "127", step: "1" } }}
+            />
+          </Grid>
+          <Grid item xs={2}>
+            <TextField
+              type="number"
+              value={store.data[x-1].maximum}
+              onChange={event => store.setMaximum(x, event.target.value)}
+              InputProps={{ inputProps: { min: "0", max: "127", step: "1" } }}
+            />
+
+          </Grid>
+          <Grid item xs={4}>
+            <Slider
+              getAriaValueText={store.data[x-1].value}
+              aria-labelledby="discrete-slider-always"
+              step={1}
+              disabled={true}
+              valueLabelDisplay="on"
+            />
+        </Grid>
+      </Grid>);
 
   return (
     <Grid container alignItems="flex-start" direction="row">
@@ -29,11 +65,28 @@ const App = observer((props: any) => {
       <Grid item xs={12}>
         <h1>Expredal</h1>
       </Grid>
-      <Grid item xs={2}>
-        <MidiSelector devices={store.midiInputs} handle={handleInput} selected={store.midiInput} label={'Input device'}/>
+      <Grid item xs={3}>
+        <MidiSelector devices={store.midiDrivers} handle={handleDriver} selected={store.midiDriver} label={'MIDI driver'}/>
       </Grid>
-      <Grid item xs={2}>
-        <MidiSelector devices={store.midiOutputs} handle={handleOutput} selected={store.midiOutput} label={'Output device'}/>
+      <Grid item xs={9}>
+      </Grid>
+        <Grid container xs={12}>
+          <Grid  item xs={2}>
+              <Typography style={{paddingTop: 0, paddingBottom: 30}}>MIDI Channel</Typography>
+          </Grid>
+          <Grid  item xs={2}>
+                Enabled
+          </Grid>
+          <Grid  item xs={2}>
+                Minimum
+          </Grid>
+          <Grid  item xs={2}>
+                Maximum
+          </Grid>
+          <Grid  item xs={4}>
+                Current position
+          </Grid>
+          {channelsData}
       </Grid>
     </Grid>
   );

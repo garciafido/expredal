@@ -5,20 +5,36 @@ import _ from "lodash";
 // import {flowed} from "./storeUtils";
 
 configure({ enforceActions: "observed" });
+const COMMAND_CHANNEL = 1;
 
 
 class ExpredalStore {
     @observable state: string = 'pending';
     @observable errorMessage: string = '';
-    @observable midiInput: string = '';
-    @observable midiOutput: string = '';
-    @observable midiInputs: string[] = [];
-    @observable midiOutputs: string[] = [];
-    @observable enabledChannels: boolean[] = [];
+    @observable midiDriver: string = '';
+    @observable midiDrivers: string[] = [];
+    @observable data: {enabled: boolean, minimum: number, maximum: number, value: any}[] = [
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        {enabled: false, minimum: 0, maximum: 127, value: undefined},
+        ];
 
     constructor() {
         makeAutoObservable(this);
-        const self = this;
+        const self: ExpredalStore = this;
         WebMidi.enable(function (err) {
             if(err) {
                     console.log("WebMidi cannot be enabled!");
@@ -26,42 +42,49 @@ class ExpredalStore {
                     console.log("WebMidi enabled!");
                     const inputs = _.map(WebMidi.inputs, x => x.name);
                     const outputs = _.map(WebMidi.outputs, x => x.name);
-                    self.setMidiInputs(inputs);
-                    self.setMidiOutputs(outputs);
+                    self.setMidiDrivers(_.intersection(outputs, inputs));
                 }
             },
             true);
     }
 
     @action.bound
-    setMidiInputs(inputs: string[]) {
-        this.midiInputs = inputs;
+    setMidiDrivers(drivers: string[]) {
+        this.midiDrivers = drivers;
+        // console.log(drivers);
     }
 
     @action.bound
-    setMidiOutputs(outputs: string[]) {
-        this.midiOutputs = outputs;
+    setEnabled(channel: number, value: boolean) {
+        this.data[channel-1].enabled = value;
     }
 
     @action.bound
-    setMidiInput(input: string) {
-        this.midiInput = input;
+    setMinimum(channel: number, value: string) {
+        this.data[channel-1].minimum = +value;
     }
 
     @action.bound
-    readConfig() {
-        const output: any = WebMidi.getOutputByName(this.midiOutput);
-        if (output) {
-            output.playNote("C1");
-        } else {
-            this.errorMessage = `Cannot connect to ${this.midiOutput}`;
+    setMaximum(channel: number, value: string) {
+        this.data[channel-1].maximum = +value;
+    }
+
+    @action.bound
+    setMidiDriver(output: string) {
+        if (this.midiDriver !== output) {
+            this.midiDriver = output;
+            this.readConfig();
         }
     }
 
     @action.bound
-    setMidiOutput(output: string) {
-        this.midiOutput = output;
-        this.readConfig();
+    readConfig() {
+        const output: any = WebMidi.getOutputByName(this.midiDriver);
+        if (output) {
+            output.playNote("C1", COMMAND_CHANNEL);
+        } else {
+            this.errorMessage = `Cannot connect to ${this.midiDriver}`;
+        }
     }
 
     @action.bound
