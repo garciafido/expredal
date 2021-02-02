@@ -4,6 +4,12 @@
 #define CONTROL_CHANGE 0x0B
 #define CONTINUOUS_CONTROLLER 0xB0
 #define EPROM_ADDRESS 0
+#define ENABLE_NOTE 24
+#define DISABLE_NOTE 26
+#define MINIMUM_NOTE 28
+#define MAXIMUM_NOTE 29
+#define GET_CONFIG_NOTE 31
+#define SAVE_CONFIG_NOTE 33
 
 const byte EPROM_SIGNATURE[] = {0x3F, 0x55, 0x68, 0x60, 0x62, 0x55, 0x54, 0x51, 0x5C, 0x3F};
 const int CONFIG_ADDRESS = sizeof(EPROM_SIGNATURE) + 1;
@@ -45,15 +51,18 @@ void readCommands() {
         byte channel = command.byte1 & 0b1111;
         byte note = command.byte2;
         byte velocity = command.byte3;
-        if (note == 24) {
+        if (note == ENABLE_NOTE) {
           expredalConfig.enabled[channel] = 1;
-        } else if (note == 26) {
+        } else if (note == DISABLE_NOTE) {
           expredalConfig.enabled[channel] = 0;
-        } else if (note == 28) {
+        } else if (note == MINIMUM_NOTE) {
           expredalConfig.minimumValues[channel] = velocity;
-        } else if (note == 29) {
+        } else if (note == MAXIMUM_NOTE) {
           expredalConfig.maximumValues[channel] = velocity;
-        } else if (note == 31) {
+        } else if (note == GET_CONFIG_NOTE) {
+          printEprom();
+        } else if (note == SAVE_CONFIG_NOTE) {
+          writeConfiguration();
           printEprom();
         }
       }

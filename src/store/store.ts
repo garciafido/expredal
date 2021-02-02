@@ -10,6 +10,7 @@ const EXPREDAL_DISABLED = 'D1';
 const EXPREDAL_MINIMUM = 'E1';
 const EXPREDAL_MAXIMUM = 'F1';
 const EXPREDAL_READ_CONFIG = 'G1';
+const EXPREDAL_SAVE_CONFIG = 'A1';
 
 
 class ExpredalStore {
@@ -100,6 +101,22 @@ class ExpredalStore {
         }
     }
 
+    @action.bound
+    getOutput(): any {
+        const output: any = WebMidi.getOutputByName(this.midiDriver);
+        if (output) {
+            return output;
+        } else {
+            this.errorMessage = `Cannot connect to ${this.midiDriver}`;
+        }
+    }
+
+    @action.bound
+    saveConfig() {
+        const output = this.getOutput();
+        output.playNote(EXPREDAL_SAVE_CONFIG, 1);
+    }
+
     setChannelData(channel: number, output: any) {
         if (this.data[channel].enabled) {
             output.playNote(EXPREDAL_ENABLED, channel+1);
@@ -110,18 +127,15 @@ class ExpredalStore {
         output.playNote(EXPREDAL_MAXIMUM, channel+1, {rawVelocity: true, velocity: this.data[channel].maximum});
     }
 
+    @action.bound
     setConfig(channel: number = -1) {
-        const output: any = WebMidi.getOutputByName(this.midiDriver);
-        if (output) {
-            if (channel === -1) {
-                for (let c=0; c < 16; c++) {
-                    this.setChannelData(c, output);
-                }
-            } else {
-                this.setChannelData(channel, output);
+        const output = this.getOutput();
+        if (channel === -1) {
+            for (let c=0; c < 16; c++) {
+                this.setChannelData(c, output);
             }
         } else {
-            this.errorMessage = `Cannot connect to ${this.midiDriver}`;
+            this.setChannelData(channel, output);
         }
     }
 

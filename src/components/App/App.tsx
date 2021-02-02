@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import { observer } from "mobx-react";
-import {Checkbox, Grid, Slider, TextField, Typography} from '@material-ui/core';
+import {Button, Checkbox, Grid, Slider, TextField, Typography} from '@material-ui/core';
 import { store } from '../../store';
 import { MidiSelector } from '../MidiSelector';
 import _ from 'lodash';
@@ -66,9 +66,12 @@ const App = observer((props: any) => {
         <h1  style={{paddingTop: 0, paddingBottom: 20}}>Expredal</h1>
       </Grid>
       <Grid item xs={3}>
-        <MidiSelector  style={{paddingTop: 0, paddingBottom: 10}} devices={store.midiDrivers} handle={handleDriver} selected={store.midiDriver} label={'MIDI driver'}/>
+        <MidiSelector style={{paddingTop: 0, paddingBottom: 10}} devices={store.midiDrivers} handle={handleDriver} selected={store.midiDriver} label={'MIDI driver'}/>
       </Grid>
-      <Grid item xs={9}>
+      <Grid item xs={3}>
+          <Button style={{paddingTop: 0, paddingBottom: 10}} onClick={() => store.saveConfig()}>Save to EPROM</Button>
+      </Grid>
+      <Grid item xs={6}>
       </Grid>
         <Grid container xs={12}>
           <Grid  item xs={2}>
