@@ -9,7 +9,9 @@ const byte EPROM_SIGNATURE[] = {0x3F, 0x55, 0x68, 0x60, 0x62, 0x55, 0x54, 0x51, 
 const int CONFIG_ADDRESS = sizeof(EPROM_SIGNATURE) + 1;
 
 struct ExpredalConfig {
-  byte activeMidiChannels[16];
+  byte enabled[16];
+  byte minimumValues[16];
+  byte maximumValues[16];
 };
 
 //
@@ -27,7 +29,9 @@ struct ExpredalConfig {
 int lastValue = -1;
 boolean on = true;
 ExpredalConfig expredalConfig = {
-  {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+  {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+  {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+  {127,127,127,127,127,127,127,127,127,127,127,127,127,127,127,127}
 };
 //
 // END RAM MEMORY STATE
@@ -42,28 +46,26 @@ void readCommands() {
         byte note = command.byte2;
         byte velocity = command.byte3;
         if (note == 24) {
-          Serial.print("Channel: ");
-          Serial.println(channel);
-          Serial.println("ENABLED");
+          expredalConfig.enabled[channel] = 1;
         } else if (note == 26) {
-          Serial.print("Channel: ");
-          Serial.println(channel);
-          Serial.println("DISABLED");
+          expredalConfig.enabled[channel] = 0;
         } else if (note == 28) {
-          Serial.print("Minimum: ");
-          Serial.println(velocity);
+          expredalConfig.minimumValues[channel] = velocity;
         } else if (note == 29) {
-          Serial.print("Maximum: ");
-          Serial.println(velocity);
+          expredalConfig.maximumValues[channel] = velocity;
+        } else if (note == 31) {
+          printEprom();
         }
       }
     }
 }
 
-void controlChange(byte control, byte value) {
+void controlChange(byte control, byte rawValue) {
   if (on) {
-    for (int channel = 0; channel < sizeof(expredalConfig.activeMidiChannels); channel++) {
-      if (expredalConfig.activeMidiChannels[channel]) {
+    for (int channel = 0; channel < 16; channel++) {
+      if (expredalConfig.enabled[channel]) {
+        int value = map(rawValue, 0, 1023, expredalConfig.minimumValues[channel], expredalConfig.maximumValues[channel]);
+        value = constrain(value, expredalConfig.minimumValues[channel], expredalConfig.maximumValues[channel]);
         midiEventPacket_t event = {CONTROL_CHANGE, CONTINUOUS_CONTROLLER | channel, control, value};
         MidiUSB.sendMIDI(event);
       }
@@ -81,8 +83,6 @@ void setup() {
 
 void loop() {
   int sensorValue = analogRead(PIN_EXPRESSION);
-  sensorValue = map(sensorValue, 0, 1023, 0, 127);
-  sensorValue = constrain(sensorValue, 0, 127);
 
   readCommands();
 
@@ -118,8 +118,15 @@ void writeConfiguration() {
 }
 
 void printEprom() {
-  for (int channel=0; channel < sizeof(expredalConfig.activeMidiChannels); channel++) {
-    Serial.print(expredalConfig.activeMidiChannels[channel], HEX);
+  for (int channel=0; channel < 16; channel++) {
+    Serial.print("Channel: ");
+    Serial.print(channel);
+    Serial.print(" Enabled: ");
+    Serial.print(expredalConfig.enabled[channel]);
+    Serial.print(" Minimum: ");
+    Serial.print(expredalConfig.minimumValues[channel]);
+    Serial.print(" Maximum: ");
+    Serial.print(expredalConfig.maximumValues[channel]);
+    Serial.println("");
   }
-  Serial.println("");
 }

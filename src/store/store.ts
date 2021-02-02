@@ -5,11 +5,11 @@ import _ from "lodash";
 // import {flowed} from "./storeUtils";
 
 configure({ enforceActions: "observed" });
-const EXPREDAL_COMMAND = 'C2';
 const EXPREDAL_ENABLED = 'C1';
 const EXPREDAL_DISABLED = 'D1';
 const EXPREDAL_MINIMUM = 'E1';
 const EXPREDAL_MAXIMUM = 'F1';
+const EXPREDAL_READ_CONFIG = 'G1';
 
 
 class ExpredalStore {
@@ -55,7 +55,6 @@ class ExpredalStore {
     @action.bound
     setMidiDrivers(drivers: string[]) {
         this.midiDrivers = drivers;
-        // console.log(drivers);
     }
 
     @action.bound
@@ -95,7 +94,7 @@ class ExpredalStore {
     readConfig() {
         const output: any = WebMidi.getOutputByName(this.midiDriver);
         if (output) {
-            output.playNote(EXPREDAL_COMMAND);
+            output.playNote(EXPREDAL_READ_CONFIG, 1);
         } else {
             this.errorMessage = `Cannot connect to ${this.midiDriver}`;
         }
