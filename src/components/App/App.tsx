@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import { observer } from "mobx-react";
-import {Checkbox, Divider, Grid, Slider, TextField, Typography} from '@material-ui/core';
+import {Checkbox, Grid, Slider, TextField, Typography} from '@material-ui/core';
 import { store } from '../../store';
 import { MidiSelector } from '../MidiSelector';
 import _ from 'lodash';
@@ -18,13 +18,13 @@ const App = observer((props: any) => {
     store.setMidiDriver(event.target.value);
   };
 
-  const channelsData = _.map([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16], x =>
+  const channelsData = _.map([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15], x =>
       <Grid container xs={12}>
-          <Grid item xs={2}>{x}</Grid>
+          <Grid item xs={2}>{x+1}</Grid>
           <Grid item xs={2}>
             <Checkbox
               color="primary"
-              checked={store.data[x-1].enabled}
+              checked={store.data[x].enabled}
               onChange={event => store.setEnabled(x, event.target.checked)}
               inputProps={{ 'aria-label': 'primary checkbox' }}
             />
@@ -32,7 +32,7 @@ const App = observer((props: any) => {
           <Grid item xs={2}>
             <TextField
               type="number"
-              value={store.data[x-1].minimum}
+              value={store.data[x].minimum}
               onChange={event => store.setMinimum(x, event.target.value)}
               InputProps={{ inputProps: { min: "0", max: "127", step: "1" } }}
             />
@@ -40,7 +40,7 @@ const App = observer((props: any) => {
           <Grid item xs={2}>
             <TextField
               type="number"
-              value={store.data[x-1].maximum}
+              value={store.data[x].maximum}
               onChange={event => store.setMaximum(x, event.target.value)}
               InputProps={{ inputProps: { min: "0", max: "127", step: "1" } }}
             />
@@ -48,7 +48,7 @@ const App = observer((props: any) => {
           </Grid>
           <Grid item xs={4}>
             <Slider
-              getAriaValueText={store.data[x-1].value}
+              getAriaValueText={store.data[x].value}
               aria-labelledby="discrete-slider-always"
               step={1}
               disabled={true}
@@ -63,10 +63,10 @@ const App = observer((props: any) => {
           {store.errorMessage}
       </Grid>
       <Grid item xs={12}>
-        <h1>Expredal</h1>
+        <h1  style={{paddingTop: 0, paddingBottom: 20}}>Expredal</h1>
       </Grid>
       <Grid item xs={3}>
-        <MidiSelector devices={store.midiDrivers} handle={handleDriver} selected={store.midiDriver} label={'MIDI driver'}/>
+        <MidiSelector  style={{paddingTop: 0, paddingBottom: 10}} devices={store.midiDrivers} handle={handleDriver} selected={store.midiDriver} label={'MIDI driver'}/>
       </Grid>
       <Grid item xs={9}>
       </Grid>

@@ -5,7 +5,11 @@ import _ from "lodash";
 // import {flowed} from "./storeUtils";
 
 configure({ enforceActions: "observed" });
-const COMMAND_CHANNEL = 1;
+const EXPREDAL_COMMAND = 'C2';
+const EXPREDAL_ENABLED = 'C1';
+const EXPREDAL_DISABLED = 'D1';
+const EXPREDAL_MINIMUM = 'E1';
+const EXPREDAL_MAXIMUM = 'F1';
 
 
 class ExpredalStore {
@@ -56,17 +60,27 @@ class ExpredalStore {
 
     @action.bound
     setEnabled(channel: number, value: boolean) {
-        this.data[channel-1].enabled = value;
+        if (this.data[channel].enabled !== value) {
+            this.data[channel].enabled = value;
+            this.setConfig(channel)
+        }
     }
 
     @action.bound
     setMinimum(channel: number, value: string) {
-        this.data[channel-1].minimum = +value;
+        if (this.data[channel].minimum !== +value) {
+            this.data[channel].minimum = +value;
+            console.log(channel);
+            this.setConfig(channel)
+        }
     }
 
     @action.bound
     setMaximum(channel: number, value: string) {
-        this.data[channel-1].maximum = +value;
+        if (this.data[channel].maximum !== +value) {
+            this.data[channel].maximum = +value;
+            this.setConfig(channel)
+        }
     }
 
     @action.bound
@@ -81,7 +95,32 @@ class ExpredalStore {
     readConfig() {
         const output: any = WebMidi.getOutputByName(this.midiDriver);
         if (output) {
-            output.playNote("C1", COMMAND_CHANNEL);
+            output.playNote(EXPREDAL_COMMAND);
+        } else {
+            this.errorMessage = `Cannot connect to ${this.midiDriver}`;
+        }
+    }
+
+    setChannelData(channel: number, output: any) {
+        if (this.data[channel].enabled) {
+            output.playNote(EXPREDAL_ENABLED, channel+1);
+        } else {
+            output.playNote(EXPREDAL_DISABLED, channel+1);
+        }
+        output.playNote(EXPREDAL_MINIMUM, channel+1, {rawVelocity: true, velocity: this.data[channel].minimum});
+        output.playNote(EXPREDAL_MAXIMUM, channel+1, {rawVelocity: true, velocity: this.data[channel].maximum});
+    }
+
+    setConfig(channel: number = -1) {
+        const output: any = WebMidi.getOutputByName(this.midiDriver);
+        if (output) {
+            if (channel === -1) {
+                for (let c=0; c < 16; c++) {
+                    this.setChannelData(c, output);
+                }
+            } else {
+                this.setChannelData(channel, output);
+            }
         } else {
             this.errorMessage = `Cannot connect to ${this.midiDriver}`;
         }

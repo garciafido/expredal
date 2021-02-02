@@ -27,12 +27,7 @@ struct ExpredalConfig {
 int lastValue = -1;
 boolean on = true;
 ExpredalConfig expredalConfig = {
-  {
-      true, true, true, true, true,
-      true, true, true, true, true,
-      true,
-      true, true, true, true, true
-  }
+  {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
 };
 //
 // END RAM MEMORY STATE
@@ -41,14 +36,27 @@ ExpredalConfig expredalConfig = {
 void readCommands() {
   midiEventPacket_t command = MidiUSB.read();
     if (command.header != 0) {
-      Serial.print("Received: ");
-      Serial.print(command.header, HEX);
-      Serial.print("-");
-      Serial.print(command.byte1, HEX);
-      Serial.print("-");
-      Serial.print(command.byte2, HEX);
-      Serial.print("-");
-      Serial.println(command.byte3, HEX);
+      byte expredalCommand = command.byte1>>4<<4;
+      if (expredalCommand == 0x90) {
+        byte channel = command.byte1 & 0b1111;
+        byte note = command.byte2;
+        byte velocity = command.byte3;
+        if (note == 24) {
+          Serial.print("Channel: ");
+          Serial.println(channel);
+          Serial.println("ENABLED");
+        } else if (note == 26) {
+          Serial.print("Channel: ");
+          Serial.println(channel);
+          Serial.println("DISABLED");
+        } else if (note == 28) {
+          Serial.print("Minimum: ");
+          Serial.println(velocity);
+        } else if (note == 29) {
+          Serial.print("Maximum: ");
+          Serial.println(velocity);
+        }
+      }
     }
 }
 
