@@ -65,7 +65,7 @@ void readCommands() {
           getConfiguration();
         } else if (note == SAVE_CONFIG_NOTE) {
           writeConfiguration();
-          printEprom();
+          printConfig();
         }
       }
     }
@@ -79,6 +79,8 @@ void controlChange(byte control, int rawValue) {
         value = constrain(value, expredalConfig.minimumValues[channel], expredalConfig.maximumValues[channel]);
         midiEventPacket_t event = {CONTROL_CHANGE, CONTINUOUS_CONTROLLER | channel, control, value};
         MidiUSB.sendMIDI(event);
+        MidiUSB.flush();
+    
         Serial.print("Channel: ");
         Serial.print(channel);
         Serial.print(" Sensor: ");
@@ -87,7 +89,7 @@ void controlChange(byte control, int rawValue) {
         Serial.println(value);
       }
     }
-    MidiUSB.flush();
+//    MidiUSB.flush();
   }
 }
 
@@ -137,7 +139,7 @@ void writeConfiguration() {
   EEPROM.put(CONFIG_ADDRESS, expredalConfig);
 }
 
-void printEprom() {
+void printConfig() {
   for (int channel=0; channel < 16; channel++) {
     Serial.print("Channel: ");
     Serial.print(channel);

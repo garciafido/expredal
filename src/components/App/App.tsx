@@ -53,6 +53,7 @@ const App = observer((props: any) => {
           </Grid>
           <Grid item xs={4}>
             <LinearProgress variant="determinate" value={normalize(store.data[x].value)} />
+            <Typography variant="caption" component="div" color="textSecondary">{`${store.data[x].value}`}</Typography>
         </Grid>
       </Grid>);
   }
