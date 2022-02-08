@@ -87,7 +87,7 @@ void controlChange(byte control, int rawValue) {
       MidiUSB.flush();
 
       Serial.print("Channel: ");
-      Serial.print(channel);
+      Serial.print(expredalConfig.channel);
       Serial.print(" Sensor: ");
       Serial.print(rawValue);
       Serial.print(" Valuel: ");
