@@ -96,19 +96,11 @@ class Expredal(object):
     def quit(self):
         midi.quit()
 
-    # def read_config(self):
-    #     output = WebMidi.getOutputByName(this.midiDriver)
-    #     if output:
-    #         output.playNote(EXPREDAL_READ_CONFIG, 1)
-    #     else:
-    #         raise Exception(f'Cannot connect to {this.midiDriver}'
-
 
 pedal = Expredal()
 pedal.open()
 pedal.config[1]['minimum'] = 21
 pedal.set_config()
-time.sleep(0.3)
 pedal.get_config()
 pedal.close()
 pedal.quit()
