@@ -52,9 +52,18 @@ class Expredal(object):
             raise Exception(f'{device_name} does not exist.\nAvailable devices: {[x[1] for x in self.devices]}')
         self.get_config()
 
+    def set_config(self):
+        for channel in range(16):
+            self.play_note(EXPREDAL_MINIMUM, channel=channel, velocity=self.config[channel]['minimum'])
+            self.play_note(EXPREDAL_MAXIMUM, channel=channel, velocity=self.config[channel]['maximum'])
+            if self.config[channel]['enabled']:
+                self.play_note(EXPREDAL_ENABLED, channel=channel)
+            else:
+                self.play_note(EXPREDAL_DISABLED, channel=channel)
+
     def get_config(self):
         self.play_note(EXPREDAL_READ_CONFIG)
-        time.sleep(0.3)
+        time.sleep(1)
         if self.input.poll():
             data = self.input.read(16*4)
             config_data = [x[0] for x in data]
@@ -76,9 +85,9 @@ class Expredal(object):
         else:
             raise Exception(f'Cannot get driver config')
 
-    def play_note(self, note):
-        self.output.note_on(note=note_number[note], velocity=127)
-        self.output.note_off(note=note_number[note], velocity=0)
+    def play_note(self, note, velocity=127, channel=0):
+        self.output.note_on(note=note_number[note], velocity=velocity, channel=channel)
+        self.output.note_off(note=note_number[note], velocity=0, channel=channel)
 
     def close(self):
         self.input.close()
@@ -97,5 +106,9 @@ class Expredal(object):
 
 pedal = Expredal()
 pedal.open()
+pedal.config[1]['minimum'] = 21
+pedal.set_config()
+time.sleep(0.3)
+pedal.get_config()
 pedal.close()
 pedal.quit()
