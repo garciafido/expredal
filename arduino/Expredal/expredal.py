@@ -106,7 +106,7 @@ class Expredal(object):
                         raise Exception(f'Unexpected config parameter {event[1]}')
                 for channel in range(16):
                     ch = self.config[channel]
-                    print(channel, ch.enabled, ch.minimum, ch.maximum)
+                    print(channel, asdict(ch))
             else:
                 raise Exception(f'Cannot get driver config')
         except Exception as e:
