@@ -114,7 +114,7 @@ void loop() {
   unsigned long elapsedTime = currentTime - timeOfLastSent;
 
   // Frequency = 1 Khz
-  if (elapsedTime > 10) {  // 10 milliseconds
+  if (elapsedTime > 25) {  // 25 milliseconds
     if (abs(sensorValue-lastRawValue) > CHANGE_SENSITIVITY && (value != lastValue)) {
       controlChange(CC_EXPRESSION, sensorValue);
       lastValue = value;
