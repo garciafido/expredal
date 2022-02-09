@@ -38,7 +38,7 @@ int lastValue = -1;
 int lastRawValue = -1;
 boolean on = true;
 ExpredalConfig expredalConfig = {
-  CC_EXPRESSION,
+  11,
   1,
   0,
   127

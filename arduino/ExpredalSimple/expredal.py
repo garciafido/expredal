@@ -13,8 +13,8 @@ EXPREDAL_ENABLED = "C1"
 EXPREDAL_DISABLED = "D1"
 EXPREDAL_MINIMUM = "E1"
 EXPREDAL_MAXIMUM = "F1"
-EXPREDAL_READ_CONFIG = "G1"
-EXPREDAL_SAVE_CONFIG = "A1"
+EXPREDAL_READ_CONFIG = "G1"  # 31
+EXPREDAL_SAVE_CONFIG = "A1"  # 33
 
 CONFIG_ENABLE_NOTE = 24
 CONFIG_DISABLE_NOTE = 26
@@ -34,7 +34,7 @@ class ChannelConfig:
     Expredal Channel Config
     """
     channel: int = 11
-    enabled: bool = False
+    enabled: bool = True
     minimum: int = 0
     maximum: int = 127
 
@@ -67,7 +67,7 @@ class Expredal(object):
                         break
             if self.input is None or self.output is None:
                 raise Exception(f'{device_name} does not exist.\nAvailable devices: {[x[1] for x in self.devices]}')
-            self.get_config()
+            # self.get_config()
         except Exception as e:
             self._end()
             raise e
@@ -104,9 +104,6 @@ class Expredal(object):
                     else:
                         raise Exception(f'Unexpected config parameter {event[1]}')
                 print(asdict(self.config))
-                # for channel in range(16):
-                #     ch = self.config[channel]
-                #     print(channel, asdict(ch))
             else:
                 raise Exception(f'Cannot get driver config')
         except Exception as e:
@@ -132,7 +129,7 @@ class Expredal(object):
 
 pedal = Expredal()
 pedal.open()
-pedal.config.minimum = 20
+# pedal.config.minimum = 20
 pedal.set_config()
 pedal.get_config()
 pedal.close()
