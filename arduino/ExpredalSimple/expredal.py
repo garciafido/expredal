@@ -129,7 +129,7 @@ class Expredal(object):
 
 pedal = Expredal()
 pedal.open()
-# pedal.config.minimum = 20
+pedal.config.minimum = 20
 pedal.set_config()
 pedal.get_config()
 pedal.close()

@@ -36,11 +36,12 @@ struct ExpredalConfig {
 //
 int lastValue = -1;
 int lastRawValue = -1;
+unsigned long timeOfLastSent = 0;
 boolean on = true;
 ExpredalConfig expredalConfig = {
   11,
   1,
-  0,
+  20,
   127
 };
 //
@@ -109,13 +110,18 @@ void loop() {
   int sensorValue = analogRead(PIN_EXPRESSION);
   int value = map(sensorValue, 0, 1023, 0, 127);
   value = constrain(value, 0, 127);
+  unsigned long currentTime = millis();
+  unsigned long elapsedTime = currentTime - timeOfLastSent;
 
-  if (abs(sensorValue-lastRawValue) > CHANGE_SENSITIVITY && (value != lastValue)) {
-    controlChange(CC_EXPRESSION, sensorValue);
-    lastValue = value;
-    lastRawValue = sensorValue;
+  // Frequency = 1 Khz = 10 milliseconds
+  if (elapsedTime > 10) {
+    if (abs(sensorValue-lastRawValue) > CHANGE_SENSITIVITY && (value != lastValue)) {
+      controlChange(CC_EXPRESSION, sensorValue);
+      lastValue = value;
+      lastRawValue = sensorValue;
+      timeOfLastSent = millis();
+    }
   }
-  delay(10); // Frequency = 1 Khz
 }
 
 boolean isEpromSigned() {
