@@ -26,7 +26,7 @@ struct ExpredalConfig {
 //
 #define PIN_EXPRESSION A0  // Analog input pin
 #define CC_EXPRESSION 11   // CC midi message for expression pedal value change
-#define CHANGE_SENSITIVITY 7
+#define CHANGE_SENSITIVITY 10
 //
 // END OF CODE CONFIGURATION
 //
