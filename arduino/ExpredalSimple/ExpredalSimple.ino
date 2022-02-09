@@ -83,7 +83,7 @@ void controlChange(byte control, int rawValue) {
     if (expredalConfig.enabled) {
       int value = map(rawValue, 0, 1023, expredalConfig.minimumValue, expredalConfig.maximumValue);
       value = constrain(value, expredalConfig.minimumValue, expredalConfig.maximumValue);
-      midiEventPacket_t event = {CONTROL_CHANGE, CONTINUOUS_CONTROLLER | expredalConfig.channel, control, value};
+      midiEventPacket_t event = {CONTROL_CHANGE, CONTINUOUS_CONTROLLER | (expredalConfig.channel-1), control, value};
       MidiUSB.sendMIDI(event);
       MidiUSB.flush();
 

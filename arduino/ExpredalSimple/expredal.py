@@ -67,7 +67,6 @@ class Expredal(object):
                         break
             if self.input is None or self.output is None:
                 raise Exception(f'{device_name} does not exist.\nAvailable devices: {[x[1] for x in self.devices]}')
-            # self.get_config()
         except Exception as e:
             self._end()
             raise e
@@ -129,7 +128,8 @@ class Expredal(object):
 
 pedal = Expredal()
 pedal.open()
-pedal.config.minimum = 20
+# pedal.get_config()
+pedal.config.minimum = 0
 pedal.set_config()
 pedal.get_config()
 pedal.close()
