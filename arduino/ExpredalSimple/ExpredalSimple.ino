@@ -87,12 +87,12 @@ void controlChange(byte control, int rawValue) {
       MidiUSB.sendMIDI(event);
       MidiUSB.flush();
 
-      Serial.print("Channel: ");
-      Serial.print(expredalConfig.channel);
-      Serial.print(" Sensor: ");
-      Serial.print(rawValue);
-      Serial.print(" Valuel: ");
-      Serial.println(value);
+//       Serial.print("Channel: ");
+//       Serial.print(expredalConfig.channel);
+//       Serial.print(" Sensor: ");
+//       Serial.print(rawValue);
+//       Serial.print(" Valuel: ");
+//       Serial.println(value);
     }
   }
 }
