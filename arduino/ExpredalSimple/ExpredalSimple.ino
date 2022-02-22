@@ -83,18 +83,15 @@ void controlChange(byte control, int rawValue) {
     if (expredalConfig.enabled) {
       int value = map(rawValue, 0, 1023, expredalConfig.minimumValue, expredalConfig.maximumValue);
       value = constrain(value, expredalConfig.minimumValue, expredalConfig.maximumValue);
-      for (int channel=0; channel < 16; channel++) {
+      int lastChannel = 15;
+      for (int channel=0; channel <= lastChannel; channel++) {
         midiEventPacket_t event = {CONTROL_CHANGE, CONTINUOUS_CONTROLLER | channel, control, value};
         MidiUSB.sendMIDI(event);
+        MidiUSB.flush();
+        if (channel < lastChannel) {
+          delay(10);
+        }
       }
-      MidiUSB.flush();
-
-//       Serial.print("Channel: ");
-//       Serial.print(expredalConfig.channel);
-//       Serial.print(" Sensor: ");
-//       Serial.print(rawValue);
-//       Serial.print(" Valuel: ");
-//       Serial.println(value);
     }
   }
 }
@@ -116,7 +113,7 @@ void loop() {
   unsigned long elapsedTime = currentTime - timeOfLastSent;
 
   // Frequency = 1 Khz
-  if (elapsedTime > 25) {  // 25 milliseconds
+  if (elapsedTime > 1) {  // 1 milliseconds
     if (abs(sensorValue-lastRawValue) > CHANGE_SENSITIVITY && (value != lastValue)) {
       controlChange(CC_EXPRESSION, sensorValue);
       lastValue = value;
